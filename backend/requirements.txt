@@ -1,0 +1,12 @@
+# requirements.txt
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+pydantic[email]
+passlib[bcrypt]
+python-jose[cryptography] # JWT 토큰
+python-dotenv
+python-multipart
+boto3
