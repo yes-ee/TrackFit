@@ -46,7 +46,21 @@ class RunDisplay(RunBase):
     class Config:
         from_attributes = True
 
-# Report 관련 스키마
-class ReportCreate(BaseModel):
-    report_type: str # "daily" or "weekly"
+# Report의 기본 필드
+class ReportBase(BaseModel):
+    report_type: str
     target_date: date
+
+# Report 생성을 요청할 때 받을 데이터
+class ReportCreate(ReportBase):
+    pass
+
+# API 응답으로 리포트 정보를 보여줄 때 사용할 데이터
+class ReportDisplay(ReportBase):
+    id: int
+    user_id: int
+    status: str
+    content: Optional[dict] = None
+
+    class Config:
+        from_attributes = True

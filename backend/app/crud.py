@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from . import models, schemas, hashing
 from datetime import datetime
+from typing import List
 
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
@@ -49,3 +50,6 @@ def update_report_content(db: Session, report_id: int, content: dict, status: st
         "completed_at": func.now()
     })
     db.commit()
+
+def get_reports_by_user(db: Session, user_id: int) -> List[models.Report]:
+    return db.query(models.Report).filter(models.Report.user_id == user_id).order_by(models.Report.target_date.desc()).all()

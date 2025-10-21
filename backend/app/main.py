@@ -1,7 +1,10 @@
 # app/main.py
 
+import logging
 from fastapi import FastAPI
 from .routers import auth, runs, reports
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
