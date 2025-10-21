@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: public.ecr.aws/s6u6a7r0/frontend:latest
+        ports:
+        - containerPort: 8501 # frontend server port
+        envFrom:
+        envFrom:
+        - configMapRef:
+            name: app-config

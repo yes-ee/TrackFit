@@ -1,4 +1,4 @@
-name: CI - Build and Push to ECR Public
+name: CI/CD - Build, Push, and Deploy
 
 on:
   push:
@@ -44,10 +44,12 @@ jobs:
       - name: Define Image Tag
         id: meta
         run: |
+          # main 브랜치면 Git 커밋 해시를, 다른 브랜치(chore/**)면 브랜치 이름을 태그로 사용
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             TAG=${{ github.sha }}
           else
-            TAG=$(echo "${{ github.ref_name }}" | sed -E 's|([^/]+)/([^-]+).*|\1-\2|' | tr '[:upper:]' '[:lower:]')
+            # 예시: chore/fix-bug -> chore-fix-bug
+            TAG=$(echo "${{ github.ref_name }}" | tr '/' '-')
           fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
@@ -64,3 +66,49 @@ jobs:
           # ECR Public 주소 형식: public.ecr.aws/<alias>/<repo-name>:<tag>
           tags: ${{ steps.login-ecr-public.outputs.registry }}/${{ secrets.ECR_PUBLIC_ALIAS }}/${{ matrix.service-name }}:${{ steps.meta.outputs.tag }}
           platforms: linux/amd64
+
+  deploy:
+    name: Deploy to EKS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Set up kubectl
+        run: |
+          aws eks update-kubeconfig --name trackfit-cluster --region ap-northeast-2
+          
+      - name: Create Kubernetes Secret
+        run: |
+          kubectl create secret generic app-secret \
+            --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            --from-literal=JWT_SECRET_KEY='${{ secrets.JWT_SECRET_KEY }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Install Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Update and Deploy to EKS
+        run: |
+          cd k8s 
+          
+          IMAGE_REGISTRY="public.ecr.aws/${{ secrets.ECR_PUBLIC_ALIAS }}"
+          COMMIT_HASH=${{ github.sha }}
+
+          kustomize edit set image ${IMAGE_REGISTRY}/api-server=${IMAGE_REGISTRY}/api-server:${COMMIT_HASH}
+          kustomize edit set image ${IMAGE_REGISTRY}/worker=${IMAGE_REGISTRY}/worker:${COMMIT_HASH}
+          kustomize edit set image ${IMAGE_REGISTRY}/frontend=${IMAGE_REGISTRY}/frontend:${COMMIT_HASH}
+          
+          kubectl apply -k .

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+      - name: api-server
+        image: public.ecr.aws/s6u6a7r0/api-server:latest
+        ports:
+        - containerPort: 80 # api server port
+
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secret

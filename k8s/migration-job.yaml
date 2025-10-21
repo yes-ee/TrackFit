@@ -1,0 +1,27 @@
+# k8s/migration-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migration
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: alembic-migration
+        image: public.ecr.aws/s6u6a7r0/api-server:latest
+        
+        command: ["alembic", "upgrade", "head"]
+        
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secret
+            
+      # Job이 실패하면 재시도
+      restartPolicy: OnFailure
+      
+  # 실패 시 재시도 횟수
+  backoffLimit: 4
