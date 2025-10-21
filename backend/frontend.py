@@ -155,11 +155,9 @@ else:
             except requests.exceptions.RequestException as e:
                 st.error(f"서버에 연결할 수 없습니다: {e}")
 
-        # --- 👇 [추가된 부분] 리포트 목록 조회 ---
         st.subheader("나의 리포트")
         if st.button("리포트 목록 새로고침"):
             try:
-                # GET /api/v1/reports/ API가 백엔드에 구현되어 있어야 합니다.
                 response = requests.get(f"{BACKEND_URL}/api/v1/reports/", headers=headers)
                 if response.status_code == 200:
                     reports = response.json()
