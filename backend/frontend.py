@@ -21,7 +21,7 @@ log.setLevel(logging.INFO)
 
 # --- 페이지 기본 설정 ---
 st.set_page_config(page_title="TrackFit", page_icon="💨", layout="wide")
-st.title("TrackFit - 러닝 기록 분석 서비스")
+st.title("TrackFit - 러닝 기록 서비스")
 
 
 # --- 1. 로그인/회원가입 화면 ---
@@ -171,7 +171,7 @@ else:
                         completed_reports = [r for r in reports if r['status'] == 'COMPLETED' and r['content']]
                         if completed_reports:
                             st.write("---")
-                            st.write("#### ✅ 완료된 리포트 내용")
+                            st.write("#### 리포트 목록")
                             for report in completed_reports:
                                 st.json(report['content'])
                     else:
