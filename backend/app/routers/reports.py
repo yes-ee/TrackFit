@@ -47,8 +47,7 @@ def request_report(
         f"type={report_request.report_type}, date={report_request.target_date.isoformat()}"
     )
 
-    session = boto3.Session(profile_name='trackfit')
-    sqs_client = session.client('sqs', region_name=AWS_REGION)
+    sqs_client = boto3.client('sqs', region_name=AWS_REGION)
 
     response = sqs_client.send_message(
         QueueUrl=SQS_QUEUE_URL,

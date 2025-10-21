@@ -52,8 +52,7 @@ def _generate_report_content(db: Session, user_id: int, target_date: date):
 
 def process_messages():
     """SQS 큐를 확인하고 메시지를 처리하는 메인 함수"""
-    session = boto3.Session(profile_name='trackfit')
-    sqs_client = session.client('sqs', region_name=AWS_REGION)
+    sqs_client = boto3.client('sqs', region_name=AWS_REGION)
 
 
     log.info("Checking for messages in SQS queue...")
